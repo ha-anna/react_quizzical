@@ -7,20 +7,19 @@ import Settings from './components/Settings'
 import Questions from './components/Questions'
 
 export default function App() {
-  const [questionData, setQuestionData] = useState([]);
-  const initialGameState = {
+
+  const [questionData, setQuestionData] = useState([])
+
+  const [game, setGame] = useState({
     pageView: 'index',
-    isStarted: false,
     isOver: false,
     points: 0,
-  }
-  const [game, setGame] = useState(initialGameState)
-  const [formData, setFormData] = useState(
-    {
-      category: "",
-      difficulty: "",
-    }
-  )
+  })
+
+  const [formData, setFormData] = useState({
+    category: "",
+    difficulty: "",
+  })
 
   useEffect(() => {
     fetch(`https://opentdb.com/api.php?amount=10&category=${formData.category}&difficulty=${formData.difficulty}&type=multiple`)
@@ -34,7 +33,7 @@ export default function App() {
           answers: [...incorrect_answers, correct_answer],
         }
       })))
-  }, [game.isStarted])
+  }, [formData])
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -44,12 +43,55 @@ export default function App() {
         [name]: value
       }
     })
+  }
+
+  function displaySettings() {
     setGame(prevState => {
       return {
         ...prevState,
-        isStarted: !prevState.isStarted,
+        pageView: 'settings',
       }
     })
+  }
+
+  function displayQuestions() {
+    setGame(prevState => {
+      return {
+        ...prevState,
+        pageView: 'questions',
+      }
+    })
+  }
+
+  function endGame() {
+    setGame(prevState => {
+      return {
+        ...prevState,
+        isOver: true,
+      }
+    })
+  }
+
+  function countPoints() {
+    setGame(prevState => {
+      return {
+        ...prevState,
+        points: prevState.points + 1,
+      }
+    })
+  }
+
+  function clearState() {
+    setGame(prevState => prevState = {
+      pageView: 'index',
+      isOver: false,
+      points: 0,
+    })
+    setFormData(prevState => prevState = {
+      category: "",
+      difficulty: "",
+    })
+    setQuestionData([])
   }
 
   return (
@@ -57,21 +99,21 @@ export default function App() {
       <SVG_Yellow />
       {game.pageView === 'index' &&
         <Intro
-          setGame={setGame}
+          displaySettings={displaySettings}
         />}
       {game.pageView === 'settings' &&
         <Settings
           formData={formData}
           handleChange={handleChange}
-          setGame={setGame}
+          displayQuestions={displayQuestions}
         />}
       {game.pageView === 'questions' &&
         <Questions
-          questions={questionData}
-          setQuestionData={setQuestionData}
           game={game}
-          setGame={setGame}
-          setFormData={setFormData}
+          questions={questionData}
+          endGame={endGame}
+          countPoints={countPoints}
+          clearState={clearState}
         />}
       <SVG_Blue />
     </>
